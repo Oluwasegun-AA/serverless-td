@@ -20,15 +20,15 @@ provider:
     lambda: true
     apiGateway: true
 
-  # Use these variables in the functions and resources section below. For example,
-  # ${provider.environment.ATTACHMENT_S3_BUCKET}
+  # Use these variables in the functions and resouorces section below. For example,
+  # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: serverless-c4-todo-images-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: serverless-c4-todo-shegs-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-    TODOITEM_TABLE_GSI: byUserIdGsi
     AUTH_0_JWT_WEB_KEY_URL: https://dev-6tbbfkcm.us.auth0.com/.well-known/jwks.json
+    AUTH_0_SECRET: 'S_BPGMpns8lOjECUugjJf_eboH_JJV8_qo1CnUxeedZckQJeq_lSpsBYUZDO5Lh0'
 
   logs:
     restApi: true
@@ -38,8 +38,7 @@ provider:
       statements:
         - Effect: Allow
           Action:
-            - xray:PutTelemetryRecords
-            - xray:PutTraceSegments
+            - xray:*
           Resource: "*"
 
 functions:
@@ -61,8 +60,9 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
+          - dynamodb:getItem
         Resource:
-          - arn:aws:dynamodb:${self:provider.region}:*:table/${provider.environment.TODOITEM_TABLE}/index/${provider.environment.TODOITEM_TABLE_GSI}
+          - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
       - Effect: Allow
         Action:
           - xray:GetSamplingRules
@@ -94,7 +94,7 @@ functions:
         Action:
           - dynamodb:putItem
         Resource:
-          - arn:aws:dynamodb:${self:provider.region}:*:table/${provider.environment.TODOITEM_TABLE}
+          - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - xray:GetSamplingRules
@@ -121,7 +121,7 @@ functions:
         Action:
           - dynamodb:updateItem
         Resource:
-          - arn:aws:dynamodb:${self:provider.region}:*:table/${provider.environment.TODOITEM_TABLE}
+          - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - xray:GetSamplingRules
@@ -148,7 +148,7 @@ functions:
         Action:
           - dynamodb:deleteItem
         Resource:
-          - arn:aws:dynamodb:${self:provider.region}:*:table/${provider.environment.TODOITEM_TABLE}
+          - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - xray:GetSamplingRules
@@ -174,12 +174,13 @@ functions:
       - Effect: Allow
         Action:
           - s3:PutObject
-        Resource: arn:aws:s3:::${provider.environment.TODOITEM_S3_BUCKET_NAME}/*
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
       - Effect: Allow
         Action:
           - dynamodb:updateItem
         Resource:
-          - arn:aws:dynamodb:${self:provider.region}:*:table/${provider.environment.TODOITEM_TABLE}
+          - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
           - xray:GetSamplingRules
@@ -211,7 +212,7 @@ resources:
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${provider.environment.TODOITEM_TABLE}
+        TableName: ${self:provider.environment.TODOS_TABLE}
         AttributeDefinitions:
           - AttributeName: todoId
             AttributeType: S
@@ -222,7 +223,7 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         GlobalSecondaryIndexes:
-          - IndexName: ${provider.environment.TODOITEM_TABLE_GSI}
+          - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
@@ -233,7 +234,7 @@ resources:
     AttachmentsBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${provider.environment.TODOITEM_S3_BUCKET_NAME}
+        BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
         CorsConfiguration:
           CorsRules:
             - AllowedOrigins:
@@ -251,7 +252,7 @@ resources:
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
-        Bucket: AttachmentsBucket
+        Bucket: !Ref AttachmentsBucket
         PolicyDocument:
           Id: MyPolicy
           Version: "2012-10-17"
@@ -259,5 +260,5 @@ resources:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
               Principal: '*'
-              Action: 's3:GetObject'
-              Resource: 'arn:aws:s3:::${provider.environment.TODOITEM_S3_BUCKET_NAME}/*'
+              Action: 's3:*'
+              Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'

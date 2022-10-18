@@ -12,8 +12,8 @@ import { createLogger } from '../utils/logger';
 
 const logger = createLogger('todoAccess');
 
-const bucketName = process.env.TODOITEM_S3_BUCKET_NAME;
-const todoTable = process.env.TODOITEM_TABLE;
+const bucketName = process.env.ATTACHMENT_S3_BUCKET;
+const todoTable = process.env.TODOS_TABLE;
 const todoTableGsi = process.env.TODOITEM_TABLE_GSI;
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION;
 
