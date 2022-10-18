@@ -5,11 +5,13 @@ import * as middy from 'middy';
 import { cors, httpErrorHandler } from 'middy/middlewares';
 
 import { deleteTodo } from '../../dataLayer/todos';
+import { getUserId } from '../utils';
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    const userId = getUserId(event);
     const todoId = event.pathParameters.todoId;
-    await deleteTodo(todoId);
+    await deleteTodo(userId, todoId);
 
     return {
       statusCode: 202,
