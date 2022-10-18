@@ -42,7 +42,7 @@ export const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
     return items as TodoItem[];
   }
 
-export const createTodo = async(userId: string, newTodo: CreateTodoRequest): Promise<string> => {
+export const createTodo = async(userId: string, newTodo: CreateTodoRequest) => {
     const todoId = uuid.v4();
 
     const newTodoWithAdditionalInfo = {
@@ -63,7 +63,7 @@ export const createTodo = async(userId: string, newTodo: CreateTodoRequest): Pro
 
     logger.info("Create complete.");
 
-    return todoId;
+  return newTodoWithAdditionalInfo;
 
   }
 

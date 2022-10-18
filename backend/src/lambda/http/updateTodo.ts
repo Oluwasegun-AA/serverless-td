@@ -1,11 +1,11 @@
-import 'source-map-support/register'
+import 'source-map-support/register';
 
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-import * as middy from 'middy'
-import { cors, httpErrorHandler } from 'middy/middlewares'
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import * as middy from 'middy';
+import { cors, httpErrorHandler } from 'middy/middlewares';
 
-import { updateTodo } from '../../businessLogic/todos'
-import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+import { updateTodo } from '../../businessLogic/todos';
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest';
 
 
 export const handler = middy(
@@ -25,12 +25,12 @@ export const handler = middy(
     };
 
   }
-)
+);
 
 handler
-  .use(httpErrorHandler())
   .use(
     cors({
       credentials: true
     })
   )
+  .use(httpErrorHandler());

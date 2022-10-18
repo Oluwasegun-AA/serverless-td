@@ -24,7 +24,6 @@ export async function createTodo(
   const response = await Axios.post(`${apiEndpoint}/todos`,  JSON.stringify(newTodo), {
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
       'Authorization': `Bearer ${idToken}`
     }
   })
@@ -39,7 +38,6 @@ export async function patchTodo(
   await Axios.patch(`${apiEndpoint}/todos/${todoId}`, JSON.stringify(updatedTodo), {
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
       'Authorization': `Bearer ${idToken}`
     }
   })
@@ -52,7 +50,6 @@ export async function deleteTodo(
   await Axios.delete(`${apiEndpoint}/todos/${todoId}`, {
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
       'Authorization': `Bearer ${idToken}`
     }
   })
@@ -65,7 +62,6 @@ export async function getUploadUrl(
   const response = await Axios.post(`${apiEndpoint}/todos/${todoId}/attachment`, '', {
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
       'Authorization': `Bearer ${idToken}`
     }
   })

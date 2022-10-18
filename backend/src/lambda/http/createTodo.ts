@@ -9,8 +9,8 @@ import { createTodo } from '../../businessLogic/todos'
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const userId = getUserId(event);
-    const newTodo: CreateTodoRequest = JSON.parse(event.body);
-    const todoId = await createTodo(userId, newTodo);
+    const payload: CreateTodoRequest = JSON.parse(event.body);
+    const newTodo = await createTodo(userId, payload);
     // TODO: Implement creating a new TODO item
 
     return {
@@ -19,11 +19,7 @@ export const handler = middy(
         'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({
-        item:
-        {
-          todoId: todoId,
-          ...newTodo
-        }
+        item: newTodo
       })
     };
   }
