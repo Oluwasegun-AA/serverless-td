@@ -1,7 +1,5 @@
 import * as AWS from "aws-sdk";
-import * as AWSXRay from "aws-xray-sdk";
-
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+const AWSXRay = require("aws-xray-sdk");
 import { TodoItem } from "../models/TodoItem";
 import * as uuid from 'uuid';
 
@@ -23,7 +21,7 @@ const s3 = new XAWS.S3({
   signatureVersion: 'v4'
 });
 
-const docClient = new DocumentClient();
+const docClient = new XAWS.DynamoDB.DocumentClient();
 
 export const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
     logger.info('Fetching all todos for userId', { userId: userId });
