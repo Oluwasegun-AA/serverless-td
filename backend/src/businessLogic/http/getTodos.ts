@@ -1,29 +1,33 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
+
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import * as middy from 'middy'
 import { cors } from 'middy/middlewares'
-import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { getUserId } from '../utils';
-import { createTodo } from '../../helpers/todos'
 
+import { getTodosForUser } from '../../dataLayer/todos'
+import { getUserId } from '../utils';
+
+// TODO: Get all TODO items for a current user
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    const userId = getUserId(event);
-    const payload: CreateTodoRequest = JSON.parse(event.body);
-    const newTodo = await createTodo(userId, payload);
-    // TODO: Implement creating a new TODO item
+    // Write your code here
 
+    const userId = getUserId(event);
+
+    const todos = await getTodosForUser(userId);
+
+    // Send results
     return {
-      statusCode: 201,
+      statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*'
       },
       body: JSON.stringify({
-        item: newTodo
+        items: todos
       })
     };
   }
-);
+)
 
 handler.use(
   cors({

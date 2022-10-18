@@ -4,19 +4,23 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as middy from 'middy';
 import { cors, httpErrorHandler } from 'middy/middlewares';
 
-import { deleteTodo } from '../../helpers/todos';
+import { createAttachmentPresignedUrl } from '../../dataLayer/todos';
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId;
-    await deleteTodo(todoId);
+
+    // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
+    const uploadUrl = await createAttachmentPresignedUrl(todoId);
 
     return {
-      statusCode: 202,
+      statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*'
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        attachmentUrl: uploadUrl
+      })
     };
   }
 );
