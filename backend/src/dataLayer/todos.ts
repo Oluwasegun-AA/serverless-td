@@ -48,7 +48,7 @@ export const createTodo = async(userId: string, newTodo: CreateTodoRequest) => {
       todoId: todoId,
       createdAt: new Date().toISOString(),
       done: false,
-      attachmentUrl: await createAttachmentPresignedUrl(todoId),
+      attachmentUrl: await createAttachmentPresignedUrl(userId, todoId),
       ...newTodo
     };
 
@@ -65,18 +65,19 @@ export const createTodo = async(userId: string, newTodo: CreateTodoRequest) => {
 
   }
 
-export const deleteTodo = async(todoId: string) => {
+export const deleteTodo = async (userId: string, todoId: string) => {
     logger.info("Deleting todo:", { todoId: todoId });
     await docClient.delete({
       TableName: todoTable,
       Key: {
-        "todoId": todoId
+        "todoId": todoId,
+        "userId": userId
       }
     }).promise();
     logger.info("Delete complete.", { todoId: todoId });
   }
 
-export const updateTodo = async(todoId: string, updatedTodo: UpdateTodoRequest) => {
+export const updateTodo = async (userId: string, todoId: string, updatedTodo: UpdateTodoRequest) => {
 
     logger.info("Updating todo:", {
       todoId: todoId,
@@ -85,7 +86,8 @@ export const updateTodo = async(todoId: string, updatedTodo: UpdateTodoRequest) 
     await docClient.update({
       TableName: todoTable,
       Key: {
-        "todoId": todoId
+        "todoId": todoId,
+        "userId": userId
       },
       UpdateExpression: "set #todoName = :name, done = :done, dueDate = :dueDate",
       ExpressionAttributeNames: {
@@ -102,13 +104,14 @@ export const updateTodo = async(todoId: string, updatedTodo: UpdateTodoRequest) 
 
   }
 
-export const updateAttachmentUrl = async (todoId: string, attachmentUrl: string) => {
+export const updateAttachmentUrl = async (userId: string, todoId: string, attachmentUrl: string) => {
   logger.info(`Updating attachmentUrl ${attachmentUrl}`)
 
     await docClient.update({
       TableName: todoTable,
       Key: {
-        "todoId": todoId
+        "todoId": todoId,
+        "userId": userId
       },
       UpdateExpression: "set attachmentUrl = :attachmentUrl",
       ExpressionAttributeValues: {
@@ -119,7 +122,7 @@ export const updateAttachmentUrl = async (todoId: string, attachmentUrl: string)
   }
 
 
-export const createAttachmentPresignedUrl = async (todoId) => {
+export const createAttachmentPresignedUrl = async (userId: string, todoId: string) => {
   const key = uuid.v4();
   logger.info("creating signed URL:", {
     todoId: todoId,
@@ -132,7 +135,7 @@ export const createAttachmentPresignedUrl = async (todoId) => {
     Expires: parseInt(urlExpiration)
   });
 
-  await updateAttachmentUrl(todoId, key);
+  await updateAttachmentUrl(userId, todoId, key);
 
   logger.info("sgned URL created:", uploadUrl);
   return uploadUrl;
