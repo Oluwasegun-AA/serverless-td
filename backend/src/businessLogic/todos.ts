@@ -14,7 +14,7 @@ const logger = createLogger('todoAccess');
 
 const bucketName = process.env.ATTACHMENT_S3_BUCKET;
 const todoTable = process.env.TODOS_TABLE;
-const todoTableGsi = process.env.TODOITEM_TABLE_GSI;
+const createdAtIndex = process.env.TODOS_CREATED_AT_INDEX;
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION;
 
 const XAWS = AWSXRay.captureAWS(AWS);
@@ -30,7 +30,7 @@ export const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
 
     const result = await docClient.query({
       TableName: todoTable,
-      IndexName: todoTableGsi,
+      IndexName: createdAtIndex,
       KeyConditionExpression: 'userId = :userId',
       ExpressionAttributeValues: {
         ':userId': userId
@@ -48,6 +48,9 @@ export const createTodo = async(userId: string, newTodo: CreateTodoRequest): Pro
     const newTodoWithAdditionalInfo = {
       userId: userId,
       todoId: todoId,
+      createdAt: new Date().toISOString(),
+      done: false,
+      attachmentUrl: await createAttachmentPresignedUrl(todoId),
       ...newTodo
     };
 
@@ -122,12 +125,13 @@ export const createAttachmentPresignedUrl = async (todoId) => {
   const key = uuid.v4();
   logger.info("creating signed URL:", {
     todoId: todoId,
-    attachmentId: key
+    attachmentId: key,
+    urlExpiration,
   });
   const uploadUrl = s3.getSignedUrl('putObject', {
     Bucket: bucketName,
     Key: key,
-    Expires: urlExpiration
+    Expires: parseInt(urlExpiration)
   });
 
   await updateAttachmentUrl(todoId, key);

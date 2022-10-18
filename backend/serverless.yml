@@ -60,7 +60,7 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:Query
-          - dynamodb:getItem
+          - dynamodb:GetItem
         Resource:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.TODOS_CREATED_AT_INDEX}
       - Effect: Allow
@@ -92,7 +92,8 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - dynamodb:putItem
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
         Resource:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
@@ -116,10 +117,11 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - dynamodb:updateItem
+          - dynamodb:UpdateItem
         Resource:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
@@ -143,10 +145,11 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
-          - dynamodb:deleteItem
+          - dynamodb:DeleteItem
         Resource:
           - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
@@ -170,6 +173,7 @@ functions:
       - http:
           method: post
           path: todos/{todoId}/attachment
+          cors: true
     iamRoleStatements:
       - Effect: Allow
         Action:
