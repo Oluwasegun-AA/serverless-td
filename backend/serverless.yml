@@ -43,12 +43,12 @@ provider:
 
 functions:
   Auth:
-    handler: src/businessLogic/auth/auth0Authorizer.handler
+    handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function -
   # Provide iamRoleStatements property for performing Actions on DynamoDB
   GetTodos:
-    handler: src/businessLogic/http/getTodos.handler
+    handler: src/lambda/http/getTodos.handler
     events:
       - http:
           method: get
@@ -79,7 +79,7 @@ functions:
           - "*"
 
   CreateTodo:
-    handler: src/businessLogic/http/createTodo.handler
+    handler: src/lambda/http/createTodo.handler
     events:
       - http:
           method: post
@@ -112,7 +112,7 @@ functions:
           - "*"
 
   UpdateTodo:
-    handler: src/businessLogic/http/updateTodo.handler
+    handler: src/lambda/http/updateTodo.handler
     events:
       - http:
           method: patch
@@ -143,7 +143,7 @@ functions:
           - "*"
 
   DeleteTodo:
-    handler: src/businessLogic/http/deleteTodo.handler
+    handler: src/lambda/http/deleteTodo.handler
     events:
       - http:
           method: delete
@@ -171,7 +171,7 @@ functions:
           - "*"
 
   GenerateUploadUrl:
-    handler: src/businessLogic/http/generateUploadUrl.handler
+    handler: src/lambda/http/generateUploadUrl.handler
     events:
       - http:
           method: post
