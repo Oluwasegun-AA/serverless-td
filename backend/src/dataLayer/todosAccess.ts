@@ -1,7 +1,6 @@
 import * as AWS from "aws-sdk";
 const AWSXRay = require("aws-xray-sdk");
 import { TodoItem } from "../models/TodoItem";
-import * as uuid from 'uuid';
 
 import { CreateTodoRequest } from "../requests/CreateTodoRequest";
 import { UpdateTodoRequest } from "../requests/UpdateTodoRequest";
@@ -23,9 +22,7 @@ const s3 = new XAWS.S3({
 
 const docClient = new XAWS.DynamoDB.DocumentClient();
 
-export const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
-    logger.info('Fetching all todos for userId', { userId: userId });
-
+export const getTodosData = async (userId: string): Promise<TodoItem[]> => {
     const result = await docClient.query({
       TableName: todoTable,
       IndexName: createdAtIndex,
@@ -35,38 +32,27 @@ export const getTodosForUser = async (userId: string): Promise<TodoItem[]> => {
       }
     }).promise();
 
-    const items = result.Items;
+  const items = result.Items;
+
+  logger.info('todos fetched', { userId: userId });
 
     return items as TodoItem[];
   }
 
-export const createTodo = async(userId: string, newTodo: CreateTodoRequest) => {
-    const todoId = uuid.v4();
-
-    const newTodoWithAdditionalInfo = {
-      userId: userId,
-      todoId: todoId,
-      createdAt: new Date().toISOString(),
-      done: false,
-      attachmentUrl: await createAttachmentPresignedUrl(userId, todoId),
-      ...newTodo
-    };
-
-    logger.info("Creating new todo object:", newTodoWithAdditionalInfo);
+export const createTodoData = async(newTodo: CreateTodoRequest) => {
 
     await docClient.put({
       TableName: todoTable,
-      Item: newTodoWithAdditionalInfo
+      Item: newTodo
     }).promise();
 
     logger.info("Create complete.");
 
-  return newTodoWithAdditionalInfo;
+  return newTodo;
 
   }
 
-export const deleteTodo = async (userId: string, todoId: string) => {
-    logger.info("Deleting todo:", { todoId: todoId });
+export const deleteTodoData = async (userId: string, todoId: string) => {
     await docClient.delete({
       TableName: todoTable,
       Key: {
@@ -77,12 +63,10 @@ export const deleteTodo = async (userId: string, todoId: string) => {
     logger.info("Delete complete.", { todoId: todoId });
   }
 
-export const updateTodo = async (userId: string, todoId: string, updatedTodo: UpdateTodoRequest) => {
+export const updateTodoData = async (updatedTodo: UpdateTodoRequest & { todoId: string, userId:string }) => {
+  // eslint-disable-next-line
+  const { todoId, userId, name, done, dueDate} = updatedTodo;
 
-    logger.info("Updating todo:", {
-      todoId: todoId,
-      updatedTodo: updatedTodo
-    });
     await docClient.update({
       TableName: todoTable,
       Key: {
@@ -94,9 +78,9 @@ export const updateTodo = async (userId: string, todoId: string, updatedTodo: Up
         "#todoName": "name"
       },
       ExpressionAttributeValues: {
-        ":name": updatedTodo.name,
-        ":done": updatedTodo.done,
-        ":dueDate": updatedTodo.dueDate
+        ":name": name,
+        ":done": done,
+        ":dueDate": dueDate
       }
     }).promise();
 
@@ -104,8 +88,7 @@ export const updateTodo = async (userId: string, todoId: string, updatedTodo: Up
 
   }
 
-export const updateAttachmentUrl = async (userId: string, todoId: string, attachmentUrl: string) => {
-  logger.info(`Updating attachmentUrl ${attachmentUrl}`)
+export const updateAttachmentUrlRecord = async (userId: string, todoId: string, attachmentUrl: string) => {
 
     await docClient.update({
       TableName: todoTable,
@@ -122,20 +105,14 @@ export const updateAttachmentUrl = async (userId: string, todoId: string, attach
   }
 
 
-export const createAttachmentPresignedUrl = async (userId: string, todoId: string) => {
-  const key = uuid.v4();
-  logger.info("creating signed URL:", {
-    todoId: todoId,
-    attachmentId: key,
-    urlExpiration,
-  });
+export const createAttachmentPresignedUrlRecord = async (payload) => {
   const uploadUrl = s3.getSignedUrl('putObject', {
     Bucket: bucketName,
-    Key: key,
-    Expires: parseInt(urlExpiration)
+    Key: payload.key,
+    Expires: urlExpiration
   });
 
-  await updateAttachmentUrl(userId, todoId, key);
+  await updateAttachmentUrlRecord(payload.userId, payload.todoId, payload.key);
 
   logger.info("sgned URL created:", uploadUrl);
   return uploadUrl;
